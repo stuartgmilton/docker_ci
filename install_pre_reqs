@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+platform_options="local gcp aws iris"
+
+usage() {
+printf "
+Usage: %s -p PLATFORM
+Options:
+ -p                 Platform that we are running the scripts on
+Platforms (-p):
+  local             Used when running on a local VM
+  aws               AWS
+  gcp               Google Cloud Platform
+  iris              Used when running within iris
+\n" "${0}";
+exit 1;
+}
+contains() { [[ ! -z "${2}" && "${1}" =~ (^|[[:space:]])${2}($|[[:space:]]) ]] && return 0  || return 1; }
+
+if [[ $1 == "" ]]; then
+  usage;
+else
+
+  while getopts ":p:" opt
+  do
+      case "${opt}" in
+          "p")
+              p=${OPTARG}
+              contains "${platform_options}" "${p}" || usage
+              ;;
+          ":")
+              printf "\nError: Option ${OPTARG} requires an argument\n"
+              usage
+              exit 1
+              ;;
+          "?")
+              printf "\nError: Unknown option -$OPTARG \n"
+              usage
+              exit 1
+              ;;
+          *)
+              usage
+              exit 1
+              ;;
+      esac
+  done
+
+  shift $((OPTIND-1))
+
+fi
+
+INSTALL=0
+if ! type "ansible" > /dev/null 2>&1; then
+  INSTALL=1
+  echo "Need to Install Ansible"
+fi
+
+OS=$(cat /etc/os-release | grep "^ID=" | cut -d'=' -f2 | tr -d '"')
+
+echo "Current Platform: $p"
+echo "Current OS:       $OS"
+     
+if [[ $p == 'gcp' ]] 
+then
+  if [[ $OS == 'rhel' ]] 
+  then
+    yum install ansible -y
+  fi
+fi
+
+# IF CENTOS
+#add epel repo
+
+# IF RHEL && GCP
+
+
+#yum install enable repo epel
+
