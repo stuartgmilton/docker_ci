@@ -4,7 +4,7 @@ platform_options="local gcp aws iris"
 
 usage() {
 printf "
-Usage: %s -p PLATFORM
+Usage: sudo %s -p PLATFORM
 Options:
  -p                 Platform that we are running the scripts on
 Platforms (-p):
@@ -49,30 +49,42 @@ else
 
 fi
 
-INSTALL=0
 if ! type "ansible" > /dev/null 2>&1; then
-  INSTALL=1
   echo "Need to Install Ansible"
-fi
-
-OS=$(cat /etc/os-release | grep "^ID=" | cut -d'=' -f2 | tr -d '"')
-
-echo "Current Platform: $p"
-echo "Current OS:       $OS"
-     
-if [[ $p == 'gcp' ]] 
-then
-  if [[ $OS == 'rhel' ]] 
-  then
-    yum install ansible -y
-  fi
-fi
-
-# IF CENTOS
-#add epel repo
-
-# IF RHEL && GCP
 
 
-#yum install enable repo epel
+  OS=$(cat /etc/os-release | grep "^ID=" | cut -d'=' -f2 | tr -d '"')
+
+  echo "Current Platform: $p"
+  echo "Current OS:       $OS"
+
+  case $p in
+       local)
+           repo='epel'
+           if [[ $OS == 'rhel' ]] 
+           then
+             echo "rhel in a local VM"
+           elif [[ $OS == 'centos' ]]
+           then
+             epel_exists=$(yum repoinfo $repo | grep 'Repo-id' -c)
+             if [[ $epel_exists = 0 ]]
+             then
+               yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
+               yum install --enablerepo=$repo ansible -y
+             fi
+           fi
+           ;;
+       gcp)
+           repo='???'
+           yum install ansible -y
+           ;;
+       aws)
+           repo='???'
+           ;;
+       *)
+  esac
+else
+  echo "Ansible already installed"
+fi  
+   
 
