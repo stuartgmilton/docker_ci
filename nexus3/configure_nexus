@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+source bash_functions
+
+wait_server "/nexus-data/log/nexus.log" 5m "Started Sonatype Nexus OSS"
+
+wait_file "/nexus-data/admin.password" 180 || { echo "File missing: '$file'"; return 1; }
+
+TMP_PASSWORD=$(cat /nexus-data/admin.password)
+
+printf "$TMP_PASSWORD\n"
+
+curl -Is http://localhost:8081
+
+curl -X GET "http://localhost:8081/service/rest/v1/repositories" -H "accept: application/json"
+

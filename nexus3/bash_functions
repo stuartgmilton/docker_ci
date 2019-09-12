@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+wait_file() {
+  local file="$1"; shift
+  local wait_seconds="${1:-10}"; shift # 10 seconds as default timeout
+
+  until test $((wait_seconds--)) -eq 0 -o -f "$file" ; do sleep 1; done
+
+  ((++wait_seconds))
+}
+
+wait_str() {
+  local file="$1"; shift
+  local search_term="$1"; shift
+  local wait_time="${1:-5m}"; shift # 5 minutes as default timeout
+
+  (timeout $wait_time tail -F -n0 "$file" &) | grep -q "$search_term" && return 0
+
+  echo "Timeout of $wait_time reached. Unable to find '$search_term' in '$file'"
+  return 1
+}
+
+
+wait_server() {
+  local server_log="$1"; shift
+  local wait_time="$1"; shift
+  local search_term="$1"; shift
+
+  echo "Waiting for '$search_term' to appear..."
+
+  wait_file "$server_log" 10 || { echo "File missing: '$server_log'"; return 1; }
+  wait_str "$server_log" "$search_term" "$wait_time"
+}
+
