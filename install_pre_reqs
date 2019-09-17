@@ -49,6 +49,8 @@ else
 
 fi
 
+
+
 if ! type "ansible" > /dev/null 2>&1; then
   echo "Need to Install Ansible"
 
@@ -72,6 +74,26 @@ if ! type "ansible" > /dev/null 2>&1; then
                yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y
                yum install --enablerepo=$repo ansible -y
              fi
+           fi
+           ;;
+       iris)
+
+           month=`date +%m`
+           declare -A months=(["02"]="02" ["03"]="02" ["04"]="02" ["05"]="05" ["06"]="05" ["07"]="05" ["08"]="08" ["09"]="08" ["10"]="08" ["11"]="11" ["12"]="11" ["01"]="11")
+           repo_month="${months[$month]}"
+           repo='rhui-epel-7Server-x86_64'
+           echo "$repo,rhui-custom-rhel-7Server-x86_64-$repo_month"
+
+           if [[ $OS == 'rhel' ]]
+           then
+             epel_exists=$(yum repoinfo $repo grep 'Repo-id' -c)
+             if [[ $epel_exists = 0 ]]
+             then
+               yum install --enablerepo=$repo,rhui-custom-rhel-7Server-x86_64-08 ansible
+             fi
+           elif [[ $OS == 'centos' ]]
+           then
+             echo "Centos in IRIS?!?"
            fi
            ;;
        gcp)
